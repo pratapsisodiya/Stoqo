@@ -1,10 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:stoqomobile/core/database/app_database.dart';
-import 'package:stoqomobile/core/network/api_client.dart';
 import 'package:stoqomobile/features/purchases/domain/models/purchase_model.dart';
 
 class PurchaseRepository {
-
   Future<List<PurchaseModel>> getPurchases(String branchId) async {
     final db = await AppDatabase.instance;
     final rows = await db.query('purchases',
@@ -22,35 +20,38 @@ class PurchaseRepository {
     return purchases;
   }
 
-  Future<void> syncFromServer(String branchId) async {
-    try {
-      final response = await ApiClient.instance.dio
-          .get('/purchases', queryParameters: {'branch_id': branchId});
-      final db = await AppDatabase.instance;
-      for (final p in (response.data as List? ?? [])) {
-        final purchase = p as Map<String, dynamic>;
-        await db.insert('purchases', {
-          'id': purchase['id'],
-          'branch_id': purchase['branch_id'],
-          'supplier_name': purchase['supplier_name'],
-          'invoice_number': purchase['invoice_number'],
-          'total_amount': purchase['total_amount'],
-          'purchase_date': purchase['purchase_date'],
-          'created_by': purchase['created_by'],
-          'created_at': purchase['created_at'],
-          'synced': 1,
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
-        for (final item in (purchase['items'] as List? ?? [])) {
-          final i = item as Map<String, dynamic>;
-          await db.insert('purchase_items', {
-            'id': i['id'],
-            'purchase_id': purchase['id'],
-            'product_id': i['product_id'],
-            'quantity': i['quantity'],
-            'unit_cost': i['unit_cost'],
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
-        }
-      }
-    } catch (_) {}
+  Future<PurchaseModel?> createPurchase({
+    required String branchId,
+    required String createdBy,
+    String? supplierName,
+    String? invoiceNumber,
+    double totalAmount = 0,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    final db = await AppDatabase.instance;
+    final id = 'po_${DateTime.now().millisecondsSinceEpoch}';
+    final now = DateTime.now().toIso8601String();
+    await db.insert('purchases', {
+      'id': id,
+      'branch_id': branchId,
+      'supplier_name': supplierName,
+      'invoice_number': invoiceNumber,
+      'total_amount': totalAmount,
+      'purchase_date': now,
+      'created_by': createdBy,
+      'created_at': now,
+      'synced': 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    for (final item in items) {
+      await db.insert('purchase_items', {
+        'id': 'pi_${DateTime.now().microsecondsSinceEpoch}_${item['product_id']}',
+        'purchase_id': id,
+        'product_id': item['product_id'],
+        'quantity': item['quantity'],
+        'unit_cost': item['unit_cost'] ?? 0,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    return getPurchases(branchId)
+        .then((list) => list.where((p) => p.id == id).firstOrNull);
   }
 }

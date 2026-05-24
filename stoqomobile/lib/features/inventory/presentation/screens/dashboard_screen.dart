@@ -6,7 +6,6 @@ import 'package:stoqomobile/features/inventory/domain/inventory_notifier.dart';
 import 'package:stoqomobile/features/sync_center/domain/sync_notifier.dart';
 import 'package:stoqomobile/shared/providers/global_providers.dart';
 import 'package:stoqomobile/shared/theme/app_colors.dart';
-import 'package:stoqomobile/shared/widgets/bottom_nav.dart';
 import 'package:stoqomobile/shared/widgets/sync_status_badge.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -112,7 +111,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 value: lowStock.toString(),
                 color: AppColors.warningLight,
                 iconColor: AppColors.lowStockFg,
-                onTap: () => context.push('/products?filter=low_stock'),
+                onTap: () => context.go('/products?filter=low_stock'),
               )),
               const SizedBox(width: 12),
               Expanded(
@@ -122,7 +121,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 value: outOfStock.toString(),
                 color: AppColors.dangerLight,
                 iconColor: AppColors.danger,
-                onTap: () => context.push('/products?filter=out_of_stock'),
+                onTap: () => context.go('/products?filter=out_of_stock'),
               )),
             ]),
             const SizedBox(height: 12),
@@ -226,7 +225,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 

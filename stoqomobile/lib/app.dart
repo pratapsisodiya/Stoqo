@@ -20,6 +20,7 @@ import 'package:stoqomobile/features/transfers/presentation/screens/transfers_sc
 import 'package:stoqomobile/features/wifi_sync/presentation/wifi_sync_screen.dart';
 import 'package:stoqomobile/shared/theme/app_theme.dart';
 import 'package:stoqomobile/shared/widgets/offline_banner.dart';
+import 'package:stoqomobile/shared/widgets/main_shell.dart';
 
 class StoqoApp extends ConsumerWidget {
   const StoqoApp({super.key});
@@ -64,11 +65,53 @@ class StoqoApp extends ConsumerWidget {
         GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
         GoRoute(path: '/setup', builder: (_, __) => const FirstRunScreen()),
         GoRoute(path: '/unlock', builder: (_, __) => const PinUnlockScreen()),
-        GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
-        GoRoute(
-          path: '/products',
-          builder: (_, state) => ProductListScreen(
-              filterParam: state.uri.queryParameters['filter']),
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return MainShellScreen(navigationShell: navigationShell);
+          },
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/',
+                  builder: (_, __) => const DashboardScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/products',
+                  builder: (_, state) => ProductListScreen(
+                      filterParam: state.uri.queryParameters['filter']),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/scan',
+                  builder: (_, __) => const BarcodeScanScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/transfers',
+                  builder: (_, __) => const TransfersScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/more',
+                  builder: (_, __) => const MoreScreen(),
+                ),
+              ],
+            ),
+          ],
         ),
         GoRoute(
           path: '/products/:id',
@@ -85,7 +128,6 @@ class StoqoApp extends ConsumerWidget {
           },
         ),
         GoRoute(path: '/add-product', builder: (_, __) => const AddProductScreen()),
-        GoRoute(path: '/scan', builder: (_, __) => const BarcodeScanScreen()),
         GoRoute(
           path: '/stock-update',
           builder: (_, state) => StockUpdateScreen(
@@ -93,12 +135,10 @@ class StoqoApp extends ConsumerWidget {
             productId: state.uri.queryParameters['product_id'],
           ),
         ),
-        GoRoute(path: '/transfers', builder: (_, __) => const TransfersScreen()),
         GoRoute(path: '/alerts', builder: (_, __) => const AlertsScreen()),
         GoRoute(path: '/sync-center', builder: (_, __) => const SyncCenterScreen()),
         GoRoute(path: '/purchases', builder: (_, __) => const PurchasesScreen()),
         GoRoute(path: '/wifi-sync', builder: (_, __) => const WifiSyncScreen()),
-        GoRoute(path: '/more', builder: (_, __) => const MoreScreen()),
       ],
     );
   }

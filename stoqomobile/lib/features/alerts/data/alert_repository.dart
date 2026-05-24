@@ -1,5 +1,4 @@
 import 'package:stoqomobile/core/database/app_database.dart';
-import 'package:stoqomobile/core/network/api_client.dart';
 import 'package:stoqomobile/features/alerts/domain/models/alert_model.dart';
 
 class AlertRepository {
@@ -28,9 +27,6 @@ class AlertRepository {
     final db = await AppDatabase.instance;
     await db.update('alerts', {'is_read': 1},
         where: 'id = ?', whereArgs: [alertId]);
-    try {
-      await ApiClient.instance.dio.patch('/alerts/$alertId/read');
-    } catch (_) {}
   }
 
   Future<void> markAllRead(String branchId) async {

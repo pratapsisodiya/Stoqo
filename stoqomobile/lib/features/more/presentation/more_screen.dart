@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:stoqomobile/features/auth/domain/auth_notifier.dart';
 import 'package:stoqomobile/shared/providers/global_providers.dart';
 import 'package:stoqomobile/shared/theme/app_colors.dart';
-import 'package:stoqomobile/shared/widgets/bottom_nav.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -173,7 +172,6 @@ class MoreScreen extends ConsumerWidget {
           const Divider(height: 1),
         ],
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
     );
   }
 }

@@ -12,7 +12,6 @@ final _purchasesProvider =
   final branch = ref.watch(currentBranchProvider);
   if (branch == null) return [];
   final repo = PurchaseRepository();
-  await repo.syncFromServer(branch.id);
   return repo.getPurchases(branch.id);
 });
 

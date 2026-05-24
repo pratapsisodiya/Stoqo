@@ -6,14 +6,12 @@ import 'package:stoqomobile/features/transfers/data/transfer_repository.dart';
 import 'package:stoqomobile/features/transfers/domain/models/transfer_model.dart';
 import 'package:stoqomobile/shared/providers/global_providers.dart';
 import 'package:stoqomobile/shared/theme/app_colors.dart';
-import 'package:stoqomobile/shared/widgets/bottom_nav.dart';
 import 'package:stoqomobile/shared/widgets/empty_state_widget.dart';
 
 final _transfersProvider = FutureProvider.autoDispose<List<TransferModel>>((ref) async {
   final branch = ref.watch(currentBranchProvider);
   if (branch == null) return [];
   final repo = TransferRepository();
-  await repo.syncFromServer(branch.id);
   return repo.getTransfers(branch.id);
 });
 
@@ -46,7 +44,6 @@ class TransfersScreen extends ConsumerWidget {
                 ),
               ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 }

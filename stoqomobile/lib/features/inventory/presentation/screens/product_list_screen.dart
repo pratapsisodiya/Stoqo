@@ -5,7 +5,6 @@ import 'package:stoqomobile/features/inventory/domain/inventory_notifier.dart';
 import 'package:stoqomobile/features/inventory/domain/models/product_model.dart';
 import 'package:stoqomobile/shared/providers/global_providers.dart';
 import 'package:stoqomobile/shared/theme/app_colors.dart';
-import 'package:stoqomobile/shared/widgets/bottom_nav.dart';
 import 'package:stoqomobile/shared/widgets/empty_state_widget.dart';
 import 'package:stoqomobile/shared/widgets/quantity_chip.dart';
 
@@ -127,7 +126,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         },
         child: const Icon(Icons.add),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 }

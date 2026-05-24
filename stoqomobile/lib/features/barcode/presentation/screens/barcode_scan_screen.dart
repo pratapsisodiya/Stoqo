@@ -5,7 +5,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:stoqomobile/features/inventory/domain/models/product_model.dart';
 import 'package:stoqomobile/shared/providers/global_providers.dart';
 import 'package:stoqomobile/shared/theme/app_colors.dart';
-import 'package:stoqomobile/shared/widgets/bottom_nav.dart';
 import 'package:stoqomobile/shared/widgets/quantity_chip.dart';
 
 class BarcodeScanScreen extends ConsumerStatefulWidget {
@@ -135,7 +134,6 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 }
