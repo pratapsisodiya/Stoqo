@@ -14,6 +14,7 @@ import 'package:stoqomobile/features/more/presentation/more_screen.dart';
 import 'package:stoqomobile/features/purchases/presentation/screens/purchases_screen.dart';
 import 'package:stoqomobile/features/sync_center/presentation/screens/sync_center_screen.dart';
 import 'package:stoqomobile/features/transfers/presentation/screens/transfers_screen.dart';
+import 'package:stoqomobile/features/splash/presentation/screens/splash_screen.dart';
 import 'package:stoqomobile/shared/theme/app_theme.dart';
 
 class StoqoApp extends ConsumerWidget {
@@ -33,8 +34,11 @@ class StoqoApp extends ConsumerWidget {
 
   GoRouter _buildRouter(WidgetRef ref, AuthState authState) {
     return GoRouter(
-      initialLocation: _initialRoute(authState),
+      initialLocation: '/splash',
       redirect: (context, state) {
+        final isSplash = state.matchedLocation == '/splash';
+        if (isSplash) return null;
+
         final loggedIn = authState.status == AuthStatus.authenticated;
         final isLogin = state.matchedLocation == '/login';
         if (!loggedIn && !isLogin) return '/login';
@@ -42,6 +46,10 @@ class StoqoApp extends ConsumerWidget {
         return null;
       },
       routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (_, __) => const SplashScreen(),
+        ),
         GoRoute(
           path: '/login',
           builder: (_, __) => const LoginScreen(),
@@ -98,13 +106,5 @@ class StoqoApp extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  String _initialRoute(AuthState state) {
-    return switch (state.status) {
-      AuthStatus.authenticated => '/',
-      AuthStatus.unauthenticated => '/login',
-      AuthStatus.unknown => '/login',
-    };
   }
 }
