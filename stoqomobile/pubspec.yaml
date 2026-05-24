@@ -1,0 +1,52 @@
+name: stoqomobile
+description: "Stoqo — offline-first inventory management for small businesses."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Navigation
+  go_router: ^14.8.1
+
+  # Local database
+  sqflite: ^2.4.1
+  path: ^1.9.1
+
+  # HTTP
+  dio: ^5.8.0+1
+
+  # Auth storage
+  flutter_secure_storage: ^9.2.4
+
+  # Barcode scanning
+  mobile_scanner: ^6.0.10
+
+  # Connectivity
+  connectivity_plus: ^6.1.4
+
+  # Notifications
+  flutter_local_notifications: ^18.0.1
+
+  # Utilities
+  uuid: ^4.5.1
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
+
+  # UI
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
