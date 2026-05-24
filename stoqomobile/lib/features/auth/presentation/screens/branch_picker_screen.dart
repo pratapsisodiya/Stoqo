@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stoqomobile/core/sync/connectivity_service.dart';
+import 'package:stoqomobile/features/auth/data/initial_sync_service.dart';
 import 'package:stoqomobile/features/auth/domain/auth_notifier.dart';
 import 'package:stoqomobile/features/auth/domain/models/branch_model.dart';
 import 'package:stoqomobile/shared/providers/global_providers.dart';
@@ -12,7 +14,6 @@ class BranchPickerScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +40,6 @@ class _BranchList extends ConsumerWidget {
     return FutureBuilder<List<BranchModel>>(
       future: repo.getCachedBranches().then((cached) async {
         if (cached.isNotEmpty) return cached;
-        // Try to create a default branch from user's branch_id
         if (userBranchId != null) {
           return [BranchModel(id: userBranchId!, name: 'My Branch', code: 'MY')];
         }
@@ -94,9 +94,17 @@ class _BranchList extends ConsumerWidget {
     );
   }
 
-  void _selectBranch(BuildContext context, WidgetRef ref, BranchModel branch) {
+  Future<void> _selectBranch(
+      BuildContext context, WidgetRef ref, BranchModel branch) async {
     ref.read(currentBranchProvider.notifier).state = branch;
     ref.read(authRepoProvider).setCurrentBranch(branch.id);
-    context.go('/');
+
+    // Kick off full initial sync in background if online — don't block navigation
+    final online = await ConnectivityService.instance.isOnline;
+    if (online) {
+      const InitialSyncService().syncBranch(branch.id, cursor: branch.syncCursor);
+    }
+
+    if (context.mounted) context.go('/');
   }
 }

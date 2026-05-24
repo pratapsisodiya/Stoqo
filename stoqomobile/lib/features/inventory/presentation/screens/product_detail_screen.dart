@@ -53,7 +53,7 @@ class _ProductDetailView extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () {},
+            onPressed: () => context.push('/products/${product.id}/edit', extra: product),
           ),
         ],
       ),

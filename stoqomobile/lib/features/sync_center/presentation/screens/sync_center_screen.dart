@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stoqomobile/core/utils/date_utils.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stoqomobile/features/sync_center/domain/sync_notifier.dart';
 import 'package:stoqomobile/shared/theme/app_colors.dart';
 
@@ -13,7 +13,7 @@ class SyncCenterScreen extends ConsumerWidget {
     final mutationsAsync = ref.watch(pendingMutationsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync Center')),
+      appBar: AppBar(title: const Text('Activity Log')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -23,31 +23,26 @@ class SyncCenterScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
                     Container(
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: syncState.syncing
-                            ? AppColors.primaryLight
-                            : syncState.pending > 0
-                                ? AppColors.warningLight
-                                : AppColors.inStockBg,
+                        color: syncState.pending > 0
+                            ? AppColors.warningLight
+                            : AppColors.inStockBg,
                         shape: BoxShape.circle,
                       ),
-                      child: syncState.syncing
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: CircularProgressIndicator(strokeWidth: 2))
-                          : Icon(
-                              syncState.pending > 0
-                                  ? Icons.sync_problem
-                                  : Icons.check_circle_outline,
-                              color: syncState.pending > 0
-                                  ? AppColors.lowStockFg
-                                  : AppColors.inStockFg,
-                            ),
+                      child: Icon(
+                        syncState.pending > 0
+                            ? Icons.pending_outlined
+                            : Icons.check_circle_outline,
+                        color: syncState.pending > 0
+                            ? AppColors.lowStockFg
+                            : AppColors.inStockFg,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -55,42 +50,27 @@ class SyncCenterScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            syncState.syncing
-                                ? 'Syncing...'
-                                : syncState.pending > 0
-                                    ? '${syncState.pending} pending'
-                                    : 'Up to date',
+                            syncState.pending > 0
+                                ? '${syncState.pending} local changes'
+                                : 'All changes saved',
                             style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
+                                fontSize: 16, fontWeight: FontWeight.w700),
                           ),
-                          if (syncState.lastSyncedAt != null)
-                            Text(
-                              'Last synced ${AppDateUtils.timeAgo(syncState.lastSyncedAt!)}',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary),
-                            ),
-                          if (syncState.conflicted > 0)
-                            Text(
-                              '${syncState.conflicted} conflicts',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.danger),
-                            ),
+                          const Text(
+                            'Use WiFi Sync to share changes with another device',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary),
+                          ),
                         ],
                       ),
                     ),
                   ]),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: syncState.syncing
-                        ? null
-                        : () => ref
-                            .read(syncNotifierProvider.notifier)
-                            .syncNow(),
-                    icon: const Icon(Icons.sync, size: 18),
-                    label: const Text('Sync Now'),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.push('/wifi-sync'),
+                    icon: const Icon(Icons.wifi_tethering, size: 18),
+                    label: const Text('Open WiFi Sync'),
                   ),
                 ],
               ),
@@ -98,7 +78,7 @@ class SyncCenterScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 20),
-          const Text('Pending Queue',
+          const Text('Local Change Log',
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -122,7 +102,7 @@ class SyncCenterScreen extends ConsumerWidget {
                         Icon(Icons.check_circle_outline,
                             color: AppColors.inStockFg),
                         SizedBox(width: 8),
-                        Text('No pending mutations',
+                        Text('No pending changes',
                             style: TextStyle(
                                 color: AppColors.inStockFg,
                                 fontWeight: FontWeight.w500)),
@@ -167,25 +147,23 @@ class _MutationTile extends StatelessWidget {
             children: [
               Text(
                 '${mutation['entity_type']} • ${mutation['operation']}',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w600),
               ),
               Text(
-                mutation['entity_id'].toString().substring(0, 8) + '...',
+                (mutation['entity_id']?.toString() ?? '').length > 8
+                    ? '${mutation['entity_id'].toString().substring(0, 8)}...'
+                    : mutation['entity_id']?.toString() ?? '',
                 style: const TextStyle(
                     fontSize: 11, color: AppColors.textSecondary),
               ),
-              if (mutation['last_error'] != null)
-                Text(
-                  mutation['last_error'].toString(),
-                  style: const TextStyle(
-                      fontSize: 10, color: AppColors.danger),
-                ),
             ],
           ),
         ),
         Text(
           status.toUpperCase(),
-          style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+          style: TextStyle(
+              fontSize: 10, color: color, fontWeight: FontWeight.w600),
         ),
       ]),
     );
@@ -193,10 +171,8 @@ class _MutationTile extends StatelessWidget {
 
   (Color, IconData) _statusStyle(String status) => switch (status) {
         'pending' => (AppColors.primary, Icons.schedule),
-        'syncing' => (AppColors.primary, Icons.sync),
         'synced' => (AppColors.inStockFg, Icons.check_circle),
         'failed' => (AppColors.danger, Icons.error_outline),
-        'conflict' => (AppColors.warning, Icons.warning_amber),
         _ => (AppColors.textSecondary, Icons.help_outline),
       };
 }

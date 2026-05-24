@@ -87,9 +87,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     final authState = ref.read(authNotifierProvider);
 
-    // If auth state is still loading/unknown, we wait (though usually it is already loaded).
-    if (authState.status == AuthStatus.unknown) {
-      // We will retry once authState updates, or via a short delay.
+    if (authState.status == AuthStatus.loading) {
       Future.delayed(const Duration(milliseconds: 300), _checkAuthAndNavigate);
       return;
     }
@@ -99,10 +97,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   void _navigateBasedOnAuth(AuthStatus status) {
     if (!mounted) return;
-    if (status == AuthStatus.authenticated) {
-      context.go('/');
-    } else {
-      context.go('/login');
+    switch (status) {
+      case AuthStatus.authenticated:
+        context.go('/');
+      case AuthStatus.firstRun:
+        context.go('/setup');
+      case AuthStatus.locked:
+        context.go('/unlock');
+      case AuthStatus.loading:
+        break;
     }
   }
 
@@ -110,7 +113,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Widget build(BuildContext context) {
     // Listen to changes in authNotifierProvider so that if it resolves after the animation, we navigate.
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
-      if (next.status != AuthStatus.unknown && _isAnimationDone) {
+      if (next.status != AuthStatus.loading && _isAnimationDone) {
         _checkAuthAndNavigate();
       }
     });

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stoqomobile/core/sync/connectivity_service.dart';
 import 'package:stoqomobile/features/alerts/domain/alert_notifier.dart';
 import 'package:stoqomobile/features/inventory/domain/inventory_notifier.dart';
 import 'package:stoqomobile/features/sync_center/domain/sync_notifier.dart';
@@ -22,7 +21,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
-    _watchConnectivity();
   }
 
   void _loadData() {
@@ -30,14 +28,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (branch != null) {
       ref.read(productListProvider.notifier).load(branch.id);
     }
-  }
-
-  void _watchConnectivity() {
-    ConnectivityService.instance.onlineStream.listen((online) {
-      if (online && mounted) {
-        ref.read(syncNotifierProvider.notifier).syncNow();
-      }
-    });
   }
 
   @override
@@ -95,7 +85,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           _loadData();
-          await ref.read(syncNotifierProvider.notifier).syncNow();
         },
         child: ListView(
           padding: const EdgeInsets.all(16),

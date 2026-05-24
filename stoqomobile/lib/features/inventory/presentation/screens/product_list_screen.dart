@@ -98,7 +98,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                         title: 'No products found',
                         subtitle: state.query.isNotEmpty
                             ? 'Try a different search term'
-                            : 'Products will appear here once synced',
+                            : 'Tap + to add your first product',
                       )
                     : RefreshIndicator(
                         onRefresh: () async {
@@ -116,6 +116,16 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await context.push('/add-product');
+          if (context.mounted) {
+            final b = ref.read(currentBranchProvider);
+            if (b != null) ref.read(productListProvider.notifier).load(b.id);
+          }
+        },
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );

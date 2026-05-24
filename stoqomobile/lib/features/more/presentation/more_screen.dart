@@ -13,6 +13,9 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final branch = ref.watch(currentBranchProvider);
+    final isOnline = ref.watch(isOnlineProvider).valueOrNull ?? true;
+    final isWifi = ref.watch(isWifiProvider).valueOrNull ?? false;
+    final wifiOnlyAsync = ref.watch(wifiOnlySyncProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
@@ -62,11 +65,89 @@ class MoreScreen extends ConsumerWidget {
             ]),
           ),
 
+          // Connectivity card
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isOnline ? AppColors.inStockBg : AppColors.dangerLight,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(children: [
+              Icon(
+                isOnline
+                    ? (isWifi ? Icons.wifi : Icons.signal_cellular_alt)
+                    : Icons.wifi_off,
+                size: 18,
+                color: isOnline ? AppColors.inStockFg : AppColors.danger,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isOnline
+                      ? (isWifi
+                          ? 'Connected via WiFi — ready to sync'
+                          : 'Mobile data — WiFi sync needs WiFi')
+                      : 'Offline — all data is saved locally',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: isOnline ? AppColors.inStockFg : AppColors.danger),
+                ),
+              ),
+            ]),
+          ),
+
+          // WiFi-only sync toggle
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(children: [
+                const Icon(Icons.wifi, size: 18, color: AppColors.primary),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('WiFi sync only',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13)),
+                      Text(
+                        'Only sync when connected to WiFi',
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                wifiOnlyAsync.when(
+                  data: (wifiOnly) => Switch(
+                    value: wifiOnly,
+                    onChanged: (_) =>
+                        ref.read(wifiOnlySyncProvider.notifier).toggle(),
+                    activeColor: AppColors.primary,
+                  ),
+                  loading: () => const SizedBox(
+                      width: 32,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2)),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ]),
+            ),
+          ),
+
           _MenuItem(
-            icon: Icons.sync_outlined,
-            title: 'Sync Center',
-            subtitle: 'Manage offline sync queue',
-            onTap: () => context.push('/sync-center'),
+            icon: Icons.wifi_tethering,
+            title: 'WiFi Sync',
+            subtitle: 'Share data with another device on WiFi',
+            onTap: () => context.push('/wifi-sync'),
           ),
           _MenuItem(
             icon: Icons.receipt_long_outlined,
@@ -82,40 +163,14 @@ class MoreScreen extends ConsumerWidget {
           ),
           const Divider(height: 1),
           _MenuItem(
-            icon: Icons.storefront_outlined,
-            title: 'Switch Branch',
-            subtitle: branch?.name ?? 'Select branch',
-            onTap: () => context.push('/branch-picker'),
-          ),
-          const Divider(height: 1),
-          _MenuItem(
-            icon: Icons.logout,
-            title: 'Sign Out',
-            subtitle: 'Log out of this device',
-            iconColor: AppColors.danger,
-            onTap: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Sign Out'),
-                  content: const Text('Are you sure you want to sign out?'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => ctx.pop(false),
-                        child: const Text('Cancel')),
-                    TextButton(
-                        onPressed: () => ctx.pop(true),
-                        child: const Text('Sign Out',
-                            style: TextStyle(color: AppColors.danger))),
-                  ],
-                ),
-              );
-              if (confirm == true && context.mounted) {
-                await ref.read(authNotifierProvider.notifier).logout();
-                context.go('/login');
-              }
+            icon: Icons.lock_outlined,
+            title: 'Lock App',
+            subtitle: 'Return to PIN screen',
+            onTap: () {
+              ref.read(authNotifierProvider.notifier).lock();
             },
           ),
+          const Divider(height: 1),
         ],
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 4),
@@ -128,25 +183,24 @@ class _MenuItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  final Color iconColor;
 
   const _MenuItem({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.iconColor = AppColors.textPrimary,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: iconColor),
+      leading: Icon(icon, color: AppColors.textPrimary),
       title: Text(title, style: const TextStyle(fontSize: 14)),
       subtitle: Text(subtitle,
-          style:
-              const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-      trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.textDisabled),
+          style: const TextStyle(
+              fontSize: 12, color: AppColors.textSecondary)),
+      trailing: const Icon(Icons.chevron_right,
+          size: 18, color: AppColors.textDisabled),
       onTap: onTap,
     );
   }

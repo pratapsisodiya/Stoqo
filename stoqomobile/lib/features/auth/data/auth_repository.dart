@@ -1,65 +1,35 @@
-import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:stoqomobile/core/constants/app_constants.dart';
 import 'package:stoqomobile/core/database/app_database.dart';
-import 'package:stoqomobile/core/network/api_client.dart';
+import 'package:stoqomobile/features/auth/data/local_auth_service.dart';
 import 'package:stoqomobile/features/auth/domain/models/branch_model.dart';
 import 'package:stoqomobile/features/auth/domain/models/user_model.dart';
 
 class AuthRepository {
-  final Dio _dio = ApiClient.instance.dio;
-  final _storage = const FlutterSecureStorage();
+  final _localAuth = LocalAuthService();
 
-  Future<UserModel> login(String login, String password) async {
-    final response = await _dio.post('/auth/login', data: {
-      'login': login,
-      'password': password,
-    });
-    final body = response.data as Map<String, dynamic>;
-    await _storage.write(
-        key: AppConstants.tokenKey, value: body['access_token'] as String);
-    await _storage.write(
-        key: AppConstants.refreshTokenKey, value: body['refresh_token'] as String);
-    return fetchMe();
-  }
+  Future<bool> get isSetupComplete => _localAuth.isSetupComplete;
 
-  Future<UserModel> fetchMe() async {
-    final response = await _dio.get('/auth/me');
-    final user = UserModel.fromJson(response.data as Map<String, dynamic>);
-    await _storage.write(
-        key: AppConstants.currentUserKey, value: jsonEncode(user.toJson()));
-    return user;
-  }
+  Future<UserModel?> getCachedUser() => _localAuth.getUser();
 
-  Future<UserModel?> getCachedUser() async {
-    final json = await _storage.read(key: AppConstants.currentUserKey);
-    if (json == null) return null;
-    return UserModel.fromJson(jsonDecode(json) as Map<String, dynamic>);
-  }
+  Future<bool> verifyPin(String pin) => _localAuth.verifyPin(pin);
 
-  Future<bool> get isLoggedIn async =>
-      (await _storage.read(key: AppConstants.tokenKey)) != null;
+  Future<void> setup({
+    required String name,
+    required String branchName,
+    required String branchCode,
+    required String pin,
+  }) =>
+      _localAuth.setup(
+          name: name, branchName: branchName, branchCode: branchCode, pin: pin);
 
-  Future<void> logout() async => _storage.deleteAll();
+  Future<BranchModel?> getLocalBranch() => _localAuth.getLocalBranch();
 
-  Future<List<BranchModel>> fetchBranches() async {
-    try {
-      final response = await _dio.get('/branches');
-      final branches = (response.data as List)
-          .map((j) => BranchModel.fromJson(j as Map<String, dynamic>))
-          .toList();
-      final db = await AppDatabase.instance;
-      for (final b in branches) {
-        await db.insert('branches', b.toDb(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
-      }
-      return branches;
-    } catch (_) {
-      return getCachedBranches();
-    }
-  }
+  Future<void> lock() async {}
+
+  Future<void> reset() => _localAuth.reset();
+
+  // ── Branch helpers ─────────────────────────────────────────────────────────
 
   Future<List<BranchModel>> getCachedBranches() async {
     final db = await AppDatabase.instance;
@@ -80,9 +50,13 @@ class AuthRepository {
     return BranchModel.fromDb(rows.first);
   }
 
-  Future<void> setCurrentBranch(String branchId) async =>
-      _storage.write(key: AppConstants.currentBranchKey, value: branchId);
+  Future<void> setCurrentBranch(String branchId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('current_branch_id', branchId);
+  }
 
-  Future<String?> getCurrentBranchId() async =>
-      _storage.read(key: AppConstants.currentBranchKey);
+  Future<String?> getCurrentBranchId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('current_branch_id');
+  }
 }

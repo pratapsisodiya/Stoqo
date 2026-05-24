@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:stoqomobile/core/sync/connectivity_service.dart';
 import 'package:stoqomobile/core/sync/sync_engine.dart';
 import 'package:stoqomobile/features/auth/data/auth_repository.dart';
 import 'package:stoqomobile/features/auth/domain/models/branch_model.dart';
@@ -20,7 +21,7 @@ final currentUserProvider = StateProvider<UserModel?>((ref) => null);
 // Current branch
 final currentBranchProvider = StateProvider<BranchModel?>((ref) => null);
 
-// Device ID — generated once and stored in SharedPreferences
+// Device ID — generated once, persisted in SharedPreferences
 final deviceIdProvider = FutureProvider<String>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   var id = prefs.getString('device_id');
@@ -40,5 +41,33 @@ final pendingSyncCountProvider = StreamProvider<int>((ref) async* {
   }
 });
 
-// Connectivity state
-final isOnlineProvider = StateProvider<bool>((ref) => true);
+// Connectivity state — reactive to actual network changes
+final isOnlineProvider = StreamProvider<bool>((ref) {
+  return ConnectivityService.instance.onlineStream;
+});
+
+// WiFi state — reactive
+final isWifiProvider = StreamProvider<bool>((ref) {
+  return ConnectivityService.instance.wifiStream;
+});
+
+// WiFi-only sync preference — persisted in SharedPreferences
+class WifiOnlySyncNotifier extends AsyncNotifier<bool> {
+  static const _key = 'wifi_only_sync';
+
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> toggle() async {
+    final current = state.valueOrNull ?? false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, !current);
+    state = AsyncData(!current);
+  }
+}
+
+final wifiOnlySyncProvider =
+    AsyncNotifierProvider<WifiOnlySyncNotifier, bool>(WifiOnlySyncNotifier.new);

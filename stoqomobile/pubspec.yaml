@@ -35,6 +35,15 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^18.0.1
 
+  # WiFi sync (device-to-device)
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  network_info_plus: ^6.0.1
+  qr_flutter: ^4.1.0
+
+  # Crypto (PIN hashing)
+  crypto: ^3.0.6
+
   # Utilities
   uuid: ^4.5.1
   intl: ^0.20.2
