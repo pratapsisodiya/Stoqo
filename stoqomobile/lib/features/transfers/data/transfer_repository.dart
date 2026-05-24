@@ -1,11 +1,9 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:uuid/uuid.dart';
 import 'package:stoqomobile/core/database/app_database.dart';
 import 'package:stoqomobile/core/network/api_client.dart';
 import 'package:stoqomobile/features/transfers/domain/models/transfer_model.dart';
 
 class TransferRepository {
-  final _uuid = const Uuid();
 
   Future<List<TransferModel>> getTransfers(String branchId) async {
     final db = await AppDatabase.instance;

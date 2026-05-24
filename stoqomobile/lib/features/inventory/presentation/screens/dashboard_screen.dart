@@ -50,7 +50,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final lowStock = products.products.where((p) => p.isLowStock).length;
     final outOfStock = products.products.where((p) => p.isOutOfStock).length;
-    final todayMovements = 0; // derived from movements if needed
 
     return Scaffold(
       appBar: AppBar(

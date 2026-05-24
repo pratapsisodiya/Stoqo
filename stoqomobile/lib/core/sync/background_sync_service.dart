@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stoqomobile/core/sync/connectivity_service.dart';
-import 'package:stoqomobile/core/sync/sync_engine.dart';
-import 'package:stoqomobile/shared/providers/global_providers.dart';
+import 'package:stoqomobile/features/sync_center/domain/sync_notifier.dart';
 
 class BackgroundSyncService {
   static BackgroundSyncService? _instance;

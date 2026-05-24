@@ -1,11 +1,9 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:uuid/uuid.dart';
 import 'package:stoqomobile/core/database/app_database.dart';
 import 'package:stoqomobile/core/network/api_client.dart';
 import 'package:stoqomobile/features/purchases/domain/models/purchase_model.dart';
 
 class PurchaseRepository {
-  final _uuid = const Uuid();
 
   Future<List<PurchaseModel>> getPurchases(String branchId) async {
     final db = await AppDatabase.instance;

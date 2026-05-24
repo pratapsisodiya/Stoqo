@@ -13,11 +13,6 @@ class BranchPickerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
 
-    // If user has a branch assigned, use it directly
-    final branches = [
-      if (user?.branchId != null)
-        BranchModel(id: user!.branchId!, name: 'My Branch', code: 'DEFAULT')
-    ];
 
     return Scaffold(
       appBar: AppBar(
